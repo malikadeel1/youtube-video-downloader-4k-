@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Videos Downloader</title>
+    <!-- CSS Styles: This controls how the website looks (colors, fonts, layout) -->
+    <style>
+        /* Reset default margins and padding for all elements */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Styling for the main body of the page */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* Purple/Blue gradient background */
+            min-height: 100vh;
+            /* Make sure it covers full screen height */
+            display: flex;
+            justify-content: center;
+            /* Center content horizontally */
+            align-items: center;
+            /* Center content vertically */
+            padding: 20px;
+        }
+
+        /* The white card container in the middle */
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            /* Drop shadow effect */
+            max-width: 600px;
+            width: 100%;
+        }
+
+        /* Header styling */
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        /* Input field styling */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            /* Smooth transition when clicked */
+        }
+
+        /* Change border color when user clicks the input */
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Button container */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* General button styling */
+        button {
+            flex: 1;
+            /* Make buttons take equal width */
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        /* Primary button (Download) - Gradient color */
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            /* Move up slightly on hover */
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Secondary button (Get Info) - Grey color */
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* Video Info Card (Hidden by default) */
+        .info-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+            /* Hidden initially */
+        }
+
+        /* Class to show the card with animation */
+        .info-card.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Animation definition */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-card img {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* Quality Dropdown Selector */
+        .quality-selector {
+            margin: 20px 0;
+            display: none;
+        }
+
+        .quality-selector.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .quality-selector label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        select:hover {
+            border-color: #667eea;
+        }
+
+        /* Message box for success/error alerts */
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Loading spinner */
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Progress Bar Container */
+        .progress-container {
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-container.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .progress-header h4 {
+            color: #333;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .progress-percentage {
+            color: #667eea;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        /* The actual colored bar that fills up */
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            transition: width 0.3s ease;
+            /* Smoothly animate width changes */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .progress-info span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎥 YouTube Downloader</h1>
+
+        <!-- Message area for errors or success -->
+        <div id="message" class="message"></div>
+
+        <!-- Input for YouTube URL -->
+        <div class="input-group">
+            <input type="text" id="videoUrl" placeholder="Enter YouTube URL here..." />
+        </div>
+
+        <!-- Buttons -->
+        <div class="button-group">
+            <button class="btn-secondary" onclick="getVideoInfo()">Get Info</button>
+            <button class="btn-primary" onclick="downloadVideo()">Download Video</button>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+
+        <!-- Progress Bar (Hidden until download starts) -->
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-header">
+                <h4>📥 Downloading...</h4>
+                <span class="progress-percentage" id="progressPercentage">0%</span>
+            </div>
+            <div class="progress-bar-wrapper">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+            <div class="progress-info">
+                <span id="progressSpeed">⚡ Speed: 0 MB/s</span>
+                <span id="progressEta">⏱️ ETA: --:--</span>
+            </div>
+        </div>
+
+        <!-- Quality Selector (Hidden until info is fetched) -->
+        <div class="quality-selector" id="qualitySelector">
+            <label for="qualitySelect">📹 Select Video Quality:</label>
+            <select id="qualitySelect">
+                <option value="best">Best Quality</option>
+            </select>
+        </div>
+
+        <!-- Video Info Card (Thumbnail, Title) -->
+        <div id="videoInfo" class="info-card"></div>
+    </div>
+
+    <!-- JavaScript: This controls the logic and interactivity -->
+    <script>
+        // Helper function to show messages (error/success)
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = 'message ' + type + ' show';
+            // Hide message after 5 seconds
+            setTimeout(function () {
+                messageDiv.className = 'message';
+            }, 5000);
+        }
+
+        // Helper function to show/hide loading spinner
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            loading.className = show ? 'loading show' : 'loading';
+        }
+
+        // Function called when "Get Info" is clicked
+        async function getVideoInfo() {
+            const url = document.getElementById('videoUrl').value;
+
+            if (!url) {
+                showMessage('Please enter a YouTube URL', 'error');
+                return;
+            }
+
+            showLoading(true); // Show spinner
+
+            try {
+                // 1. Ask backend for video details
+                const infoResponse = await fetch('/info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: url
+                    })
+                });
+
+                const infoData = await infoResponse.json();
+
+                if (infoResponse.ok) {
+                    // Display video info (thumbnail, title)
+                    const infoDiv = document.getElementById('videoInfo');
+                    const duration = infoData.duration ? Math.floor(infoData.duration / 60) + ':' + (infoData.duration % 60).toString().padStart(2, '0') : 'N/A';
+
+                    infoDiv.innerHTML = (infoData.thumbnail ? '<img src="' + infoData.thumbnail + '" alt="Thumbnail">' : '') +
+                        '<h3>' + (infoData.title || 'N/A') + '</h3>' +
+                        '<p><strong>Uploader:</strong> ' + (infoData.uploader || 'N/A') + '</p>' +
+                        '<p><strong>Duration:</strong> ' + duration + '</p>';
+                    infoDiv.className = 'info-card show';
+
+                    // 2. Ask backend for available formats (resolutions)
+                    const formatsResponse = await fetch('/formats', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            url: url
+                        })
+                    });
+
+                    const formatsData = await formatsResponse.json();
+
+                    if (formatsResponse.ok && formatsData.formats) {
+                        // Populate the dropdown with options
+                        const qualitySelect = document.getElementById('qualitySelect');
+                        const qualitySelector = document.getElementById('qualitySelector');
+
+                        qualitySelect.innerHTML = '<option value="best">Best Quality (Highest Available)</option>';
+
+                        formatsData.formats.forEach(function (format) {
+                            const option = document.createElement('option');
+                            option.value = format.quality;
+                            const sizeText = format.filesize > 0 ? ' (~' + (format.filesize / 1024 / 1024).toFixed(1) + ' MB)' : '';
+                            option.textContent = format.quality + sizeText;
+                            qualitySelect.appendChild(option);
+                        });
+
+                        // Add Audio Only option
+                        const audioOption = document.createElement('option');
+                        audioOption.value = 'audio';
+                        audioOption.textContent = 'Audio Only (MP3)';
+                        qualitySelect.appendChild(audioOption);
+
+                        // Show the dropdown
+                        qualitySelector.className = 'quality-selector show';
+                    }
+                } else {
+                    showMessage(infoData.error || 'Failed to get video info', 'error');
+                }
+            } catch (error) {
+                showMessage('An error occurred: ' + error.message, 'error');
+            } finally {
+                showLoading(false); // Hide spinner
+            }
+        }
+
+        // Function called when "Download Video" is clicked
+        async function downloadVideo() {
+            const url = document.getElementById('videoUrl').value;
+            const quality = document.getElementById('qualitySelect').value;
+
+            if (!url) {
+                showMessage('Please enter a YouTube URL', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                // 1. Send download request to backend
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        quality: quality
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    console.log('Download initiated, session ID:', data.session_id);
+                    showLoading(false);
+
+                    // Show progress bar container
+                    const progressContainer = document.getElementById('progressContainer');
+                    progressContainer.className = 'progress-container show';
+
+                    // 2. Connect to Server-Sent Events (SSE) to get live progress
+                    const sessionId = data.session_id;
+                    const eventSource = new EventSource('/progress/' + sessionId);
+
+                    // Listen for messages from the server
+                    eventSource.onmessage = function (event) {
+                        const progress = JSON.parse(event.data);
+                        console.log('Progress:', progress);
+
+                        // Update UI elements
+                        const progressBar = document.getElementById('progressBar');
+                        const progressPercentage = document.getElementById('progressPercentage');
+                        const progressSpeed = document.getElementById('progressSpeed');
+                        const progressEta = document.getElementById('progressEta');
+
+                        // Update bar width and text
+                        progressBar.style.width = progress.percentage + '%';
+                        progressPercentage.textContent = progress.percentage + '%';
+
+                        // Format speed (bytes -> MB)
+                        const speed = progress.speed || 0;
+                        const speedMB = (speed / 1024 / 1024).toFixed(2);
+                        progressSpeed.textContent = '⚡ Speed: ' + speedMB + ' MB/s';
+
+                        // Format ETA (seconds -> MM:SS)
+                        const eta = progress.eta || 0;
+                        const minutes = Math.floor(eta / 60);
+                        const seconds = Math.floor(eta % 60);
+                        progressEta.textContent = '⏱️ ETA: ' + minutes + ':' + seconds.toString().padStart(2, '0');
+
+                        // Check if download is finished
+                        if (progress.status === 'finished') {
+                            eventSource.close(); // Close connection
+                            setTimeout(function () {
+                                progressContainer.className = 'progress-container'; // Hide progress bar
+                                showMessage(data.message + ' File: ' + data.filename, 'success');
+                            }, 1000);
+                        }
+                    };
+
+                    eventSource.onerror = function () {
+                        console.error('SSE connection error');
+                        eventSource.close();
+                        progressContainer.className = 'progress-container';
+                    };
+                } else {
+                    showMessage(data.error || 'Download failed', 'error');
+                    showLoading(false);
+                }
+            } catch (error) {
+                showMessage('An error occurred: ' + error.message, 'error');
+                showLoading(false);
+            }
+        }
+    </script>
+</body>
+
+</html>
